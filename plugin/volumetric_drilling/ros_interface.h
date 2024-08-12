@@ -1,7 +1,7 @@
 //==============================================================================
 /*
     Software License Agreement (BSD License)
-    Copyright (c) 2019-2022, AMBF
+    Copyright (c) 2019-2024, AMBF
     (https://github.com/WPI-AIM/ambf)
 
     All rights reserved.
@@ -40,16 +40,25 @@
     \author    Adnan Munawar
 */
 //==============================================================================
+
 #ifndef COLLISION_PUBLISHER_H
 #define COLLISION_PUBLISHER_H
 
-#include "ros/ros.h"
-#include <string>
+#include <ambf_server/ambf_ral.h>
+#if ROS1
+// #include <std_msgs/ColorRGBA.h>
+#include <geometry_msgs/WrenchStamped.h>
 #include <volumetric_drilling_msgs/Voxels.h>
 #include <volumetric_drilling_msgs/DrillSize.h>
 #include <volumetric_drilling_msgs/VolumeInfo.h>
-#include <geometry_msgs/WrenchStamped.h>
-#include <std_msgs/ColorRGBA.h>
+#elif ROS2
+// #include <std_msgs/msg/color_rgba.h>
+#include <geometry_msgs/msg/wrench_stamped.hpp>
+#include <volumetric_drilling_msgs/msg/voxels.hpp>
+#include <volumetric_drilling_msgs/msg/drill_size.hpp>
+#include <volumetric_drilling_msgs/msg/volume_info.hpp>
+#endif
+
 
 #include <afFramework.h>
 
@@ -57,10 +66,10 @@ using namespace chai3d;
 
 class DrillingPublisher{
 public:
-    DrillingPublisher(std::string a_namespace, std::string a_plugin);
+    DrillingPublisher(const std::string & a_namespace, const std::string & a_plugin);
     ~DrillingPublisher();
-    void init(std::string a_namespace, std::string a_plugin);
-    ros::NodeHandle* m_rosNode;
+    void init(const std::string & a_namespace, const std::string & a_plugin);
+    ambf_ral::node_ptr_t m_rosNode;
     void publishDrillSize(int burrSize, double time);
 
     void setVolumeInfo(cTransform& pose, cVector3d& dimensions, cVector3d& voxel_count);
@@ -76,15 +85,15 @@ public:
     void publishForceFeedback(cVector3d& force, cVector3d& moment, double time);
 
 private:
-    ros::Publisher m_voxelsRemovalPub;
-    ros::Publisher m_drillSizePub;
-    ros::Publisher m_volumeInfoPub;
-    ros::Publisher m_forcefeedbackPub;
+    AMBF_RAL_PUBLISHER_PTR(AMBF_RAL_MSG(volumetric_drilling_msgs, Voxels)) m_voxelsRemovalPubPtr;
+    AMBF_RAL_PUBLISHER_PTR(AMBF_RAL_MSG(volumetric_drilling_msgs, DrillSize)) m_drillSizePubPtr;
+    AMBF_RAL_PUBLISHER_PTR(AMBF_RAL_MSG(volumetric_drilling_msgs, VolumeInfo)) m_volumeInfoPubPtr;
+    AMBF_RAL_PUBLISHER_PTR(AMBF_RAL_MSG(geometry_msgs, WrenchStamped)) m_forcefeedbackPubPtr;
 
-    volumetric_drilling_msgs::Voxels m_voxel_msg;
-    volumetric_drilling_msgs::DrillSize m_drill_size_msg;
-    volumetric_drilling_msgs::VolumeInfo m_volume_info_msg;
-    geometry_msgs::WrenchStamped m_force_feedback_msg;
+    AMBF_RAL_MSG(volumetric_drilling_msgs, Voxels) m_voxel_msg;
+    AMBF_RAL_MSG(volumetric_drilling_msgs, DrillSize) m_drill_size_msg;
+    AMBF_RAL_MSG(volumetric_drilling_msgs, VolumeInfo) m_volume_info_msg;
+    AMBF_RAL_MSG(geometry_msgs, WrenchStamped) m_force_feedback_msg;
 
 };
 

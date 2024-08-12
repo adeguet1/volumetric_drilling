@@ -45,30 +45,46 @@
 
 using namespace std;
 
-DrillingPublisher::DrillingPublisher(string a_namespace, string a_plugin){
+DrillingPublisher::DrillingPublisher(const string & a_namespace, const string & a_plugin){
     init(a_namespace, a_plugin);
 }
 
 DrillingPublisher::~DrillingPublisher(){
-    m_voxelsRemovalPub.shutdown();
-    m_drillSizePub.shutdown();
-    m_volumeInfoPub.shutdown();
+    ambf_ral::publisher_shutdown(m_voxelsRemovalPubPtr);
+    ambf_ral::publisher_shutdown(m_drillSizePubPtr);
+    ambf_ral::publisher_shutdown(m_volumeInfoPubPtr);
 }
 
-void DrillingPublisher::init(string a_namespace, string a_plugin){
-    m_rosNode = afROSNode::getNode();
+void DrillingPublisher::init(const string & a_namespace, const string & a_plugin){
+    m_rosNode = afROSNode::getNode(a_plugin);
 
-    m_voxelsRemovalPub = m_rosNode->advertise<volumetric_drilling_msgs::Voxels>(a_namespace + "/" + a_plugin + "/voxels_removed", 1);
-    m_drillSizePub = m_rosNode->advertise<volumetric_drilling_msgs::DrillSize>(a_namespace + "/" + a_plugin + "/drill_size", 1, true);
-    m_volumeInfoPub = m_rosNode->advertise<volumetric_drilling_msgs::VolumeInfo>(a_namespace + "/" + a_plugin + "/volume_info", 1, true);
-    m_forcefeedbackPub = m_rosNode->advertise<geometry_msgs::WrenchStamped>(a_namespace + "/" + a_plugin + "/drill_force_feedback", 1, true);
+    ambf_ral::create_publisher<AMBF_RAL_MSG(volumetric_drilling_msgs, Voxels)>
+      (m_voxelsRemovalPubPtr,
+       m_rosNode,
+       a_namespace + "/" + a_plugin + "/voxels_removed",
+       1, false);
+    ambf_ral::create_publisher<AMBF_RAL_MSG(volumetric_drilling_msgs, DrillSize)>
+      (m_drillSizePubPtr,
+       m_rosNode,
+       a_namespace + "/" + a_plugin + "/drill_size",
+       1, true);
+    ambf_ral::create_publisher<AMBF_RAL_MSG(volumetric_drilling_msgs, VolumeInfo)>
+      (m_volumeInfoPubPtr,
+       m_rosNode,
+       a_namespace + "/" + a_plugin + "/volume_info",
+       1, true);
+    ambf_ral::create_publisher<AMBF_RAL_MSG(geometry_msgs, WrenchStamped)>
+      (m_forcefeedbackPubPtr,
+       m_rosNode,
+       a_namespace + "/" + a_plugin + "/drill_force_feedback",
+       1, true);
 }
 
 void DrillingPublisher::publishDrillSize(int burrSize, double time){
-    m_drill_size_msg.header.stamp.fromSec(time);
+    m_drill_size_msg.header.stamp = ambf_ral::time_from_seconds(time);
     m_drill_size_msg.size.data = burrSize;
 
-    m_drillSizePub.publish(m_drill_size_msg);
+    m_drillSizePubPtr->publish(m_drill_size_msg);
 }
 
 void DrillingPublisher::setVolumeInfo(cTransform &pose, cVector3d& dimensions, cVector3d& voxel_count)
@@ -99,16 +115,16 @@ void DrillingPublisher::setVolumeInfo(cTransform &pose, cVector3d& dimensions, c
 
 void DrillingPublisher::publishVolumeInfo(double time)
 {
-    m_volume_info_msg.header.stamp.fromSec(time);
-    m_volumeInfoPub.publish(m_volume_info_msg);
+    m_volume_info_msg.header.stamp = ambf_ral::time_from_seconds(time);
+    m_volumeInfoPubPtr->publish(m_volume_info_msg);
 }
 
 void DrillingPublisher::appendToVoxelMsg(cVector3d &index, cColorf &color)
 {
-    volumetric_drilling_msgs::Index idx;
+    AMBF_RAL_MSG(volumetric_drilling_msgs, Index) idx;
     idx.x = index.x(); idx.y = index.y(); idx.z = index.z();
     m_voxel_msg.indices.push_back(idx);
-    std_msgs::ColorRGBA col;
+    AMBF_RAL_MSG(std_msgs, ColorRGBA) col;
     col.r = color.getR(); col.g = color.getG(); col.b = color.getB(); col.a = color.getA();
     m_voxel_msg.colors.push_back(col);
 }
@@ -122,13 +138,13 @@ void DrillingPublisher::clearVoxelMsg()
 
 void DrillingPublisher::publishVoxelMsg(double time)
 {
-    m_voxel_msg.header.stamp.fromSec(time);
-    m_voxelsRemovalPub.publish(m_voxel_msg);
+    m_voxel_msg.header.stamp = ambf_ral::time_from_seconds(time);
+    m_voxelsRemovalPubPtr->publish(m_voxel_msg);
 }
 
 void DrillingPublisher::publishForceFeedback(cVector3d& force, cVector3d& moment, double time)
 {
-    m_force_feedback_msg.header.stamp.fromSec(time);
+    m_force_feedback_msg.header.stamp = ambf_ral::time_from_seconds(time);
     m_force_feedback_msg.wrench.force.x = force.x();
     m_force_feedback_msg.wrench.force.y = force.y();
     m_force_feedback_msg.wrench.force.z = force.z();
@@ -137,5 +153,5 @@ void DrillingPublisher::publishForceFeedback(cVector3d& force, cVector3d& moment
     m_force_feedback_msg.wrench.torque.y = moment.y();
     m_force_feedback_msg.wrench.torque.z = moment.z();
 
-    m_forcefeedbackPub.publish(m_force_feedback_msg);
+    m_forcefeedbackPubPtr->publish(m_force_feedback_msg);
 }

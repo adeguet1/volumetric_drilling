@@ -37,53 +37,115 @@
 #  $Date:  $
 #  $Rev:  $
 
-cmake_minimum_required (VERSION 3.1)
-project (volumetric_plugin)
-
-set(CMAKE_CXX_STANDARD 11)
+cmake_minimum_required (VERSION 3.10)
+project (volumetric_drilling)
 
 find_package(AMBF)
 find_package(Boost COMPONENTS program_options filesystem)
 
-add_subdirectory(volumetric_drilling_msgs)
-find_package(catkin COMPONENTS volumetric_drilling_msgs)
+set (ROS1_depends ambf_server volumetric_drilling_msgs)
+find_package (catkin QUIET
+  COMPONENTS ${ROS1_depends})
 
-include_directories(${AMBF_INCLUDE_DIRS})
-include_directories(${Boost_INCLUDE_DIRS})
-include_directories(${catkin_INCLUDE_DIRS})
+# ROS 1
+if (catkin_FOUND)
+  add_definitions (-DROS1)
+  set (ROS_VERSION 1)
+  include_directories (${catkin_INCLUDE_DIRS})
+  
+else (catkin_FOUND)
 
-link_directories(${AMBF_LIBRARY_DIRS})
+  # look for ROS2
+  find_package (ament_cmake QUIET)
+  if (ament_cmake_FOUND)
+    add_definitions (-DROS2)
+    set (ROS_VERSION 2)
+    set (ROS2_depends rclcpp geometry_msgs ambf_msgs volumetric_drilling_msgs ambf_server)
+    foreach (_dep ${ROS2_depends})
+      find_package (${_dep} REQUIRED)
+    endforeach ()
+    link_directories (${ament_cmake_LIBRARY_DIRS})
 
-add_definitions(${AMBF_DEFINITIONS})
+  endif (ament_cmake_FOUND)
+endif (catkin_FOUND)
+
+include_directories (
+  ${AMBF_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS})
+
+link_directories (${AMBF_LIBRARY_DIRS})
+
+add_definitions (${AMBF_DEFINITIONS})
+  
+add_library(volumetric_drilling
+  SHARED
+  volumetric_drilling/common.h
+  volumetric_drilling/volumetric_drilling.cpp
+  volumetric_drilling/volumetric_drilling.h
+  volumetric_drilling/ros_interface.cpp
+  volumetric_drilling/ros_interface.h
+  volumetric_drilling/joystick.cpp
+  volumetric_drilling/joystick.h
+  volumetric_drilling/footpedal.cpp
+  volumetric_drilling/footpedal.h
+  volumetric_drilling/wave_generator.cpp
+  volumetric_drilling/wave_generator.h
+  volumetric_drilling/drill_manager.cpp
+  volumetric_drilling/drill_manager.h
+  volumetric_drilling/camera_panel_manager.h
+  volumetric_drilling/camera_panel_manager.cpp
+  volumetric_drilling/gaze_marker_controller.h
+  volumetric_drilling/gaze_marker_controller.cpp)
+
+target_link_libraries (
+  volumetric_drilling
+  ${Boost_LIBRARIES}
+  ${AMBF_LIBRARIES})
+set_property (TARGET volumetric_drilling PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+
+add_library (camera_hmd
+  camera_hmd/hmd.cpp
+  camera_hmd/hmd.h)
+target_link_libraries (camera_hmd ${AMBF_LIBRARIES})
+set_property (TARGET camera_hmd PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 
-message("---> LIBS " ${catkin_INCLUDE_DIRS})
-message("---> FOUND ? " ${catkin_vdrilling_msgs_FOUND})
+if (ROS_VERSION EQUAL 1)
+  add_dependencies (volumetric_drilling ${catkin_EXPORTED_TARGETS})
+  target_link_libraries (volumetric_drilling ${catkin_LIBRARIES})
 
-set (vol_plugin_prefix "plugin/volumetric_drilling")
+else ()
 
-add_library(volumetric_drilling SHARED
-    ${vol_plugin_prefix}/common.h
-    ${vol_plugin_prefix}/volumetric_drilling.cpp
-    ${vol_plugin_prefix}/volumetric_drilling.h
-    ${vol_plugin_prefix}/ros_interface.cpp
-    ${vol_plugin_prefix}/ros_interface.h
-    ${vol_plugin_prefix}/joystick.cpp
-    ${vol_plugin_prefix}/joystick.h
-    ${vol_plugin_prefix}/footpedal.cpp
-    ${vol_plugin_prefix}/footpedal.h
-    ${vol_plugin_prefix}/wave_generator.cpp
-    ${vol_plugin_prefix}/wave_generator.h
-    ${vol_plugin_prefix}/drill_manager.cpp
-    ${vol_plugin_prefix}/drill_manager.h
-    ${vol_plugin_prefix}/camera_panel_manager.h
-    ${vol_plugin_prefix}/camera_panel_manager.cpp
-    ${vol_plugin_prefix}/gaze_marker_controller.h
-  ${vol_plugin_prefix}/gaze_marker_controller.cpp)
-add_dependencies(volumetric_drilling ${catkin_EXPORTED_TARGETS})
-target_link_libraries (volumetric_drilling ${Boost_LIBRARIES} ${AMBF_LIBRARIES} ${catkin_LIBRARIES})
-set_property(TARGET volumetric_drilling PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+  ament_target_dependencies (
+    volumetric_drilling
+    ${ROS2_depends})
 
-add_library(camera_hmd plugin/camera_hmd/hmd.cpp plugin/camera_hmd/hmd.h)
-target_link_libraries(camera_hmd ${AMBF_LIBRARIES})
-set_property(TARGET camera_hmd PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+  install (
+    DIRECTORY volumetric_drilling
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.h"
+    )
+
+  install (
+    TARGETS volumetric_drilling
+    EXPORT volumetric_drilling
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+    )
+
+  ament_export_targets (volumetric_drilling HAS_LIBRARY_TARGET)
+  ament_export_dependencies (${ROS2_depends})
+  ament_package ()
+
+  install (
+    TARGETS camera_hmd
+    EXPORT camera_hmd
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+    )
+
+endif ()

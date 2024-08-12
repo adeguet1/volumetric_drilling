@@ -1,38 +1,65 @@
-cmake_minimum_required(VERSION 2.8.3)
-if (POLICY CMP0048)
-    cmake_policy(SET CMP0048 NEW)
-endif (POLICY CMP0048)
-project(volumetric_drilling_msgs)
+cmake_minimum_required (VERSION 3.10)
+project (volumetric_drilling_msgs)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
-
-find_package(catkin REQUIRED COMPONENTS
+find_package (catkin QUIET COMPONENTS
   message_generation
-  geometry_msgs
   std_msgs
+  geometry_msgs
 )
 
-add_message_files(
-  FILES
+set (MESSAGES
   Index.msg
   Voxels.msg
   DrillSize.msg
   VolumeInfo.msg
-)
+  )
 
-generate_messages(
-  DEPENDENCIES
-  geometry_msgs
-  std_msgs
-)
+# ROS 1
+if (catkin_FOUND)
+  add_definitions (-DROS1)
+  set (ROS_VERSION 1)
+else (catkin_FOUND)
+  # look for ROS2
+  find_package(ament_cmake QUIET)
+  if (ament_cmake_FOUND)
+    add_compile_definitions (ROS2)
+    set (ROS_VERSION 2)
+    find_package (rosidl_default_generators REQUIRED)
+    find_package (std_msgs REQUIRED)
+    find_package (geometry_msgs REQUIRED)
+  endif (ament_cmake_FOUND)
+endif(catkin_FOUND)
 
-catkin_package(
-  CATKIN_DEPENDS message_runtime
-)
+if (ROS_VERSION EQUAL 1)
+  add_message_files (
+    FILES
+    ${MESSAGES}
+  )
+  generate_messages (
+    DEPENDENCIES
+    geometry_msgs
+    std_msgs
+  )
+  catkin_package (
+    CATKIN_DEPENDS message_runtime
+  )
+  include_directories(
+    ${catkin_INCLUDE_DIRS}
+  )
+
+else (ROS_VERSION EQUAL 2)
+
+  set (MESSAGES_ROS2 "")
+  foreach (_msg ${MESSAGES})
+    list (APPEND MESSAGES_ROS2  "msg/${_msg}")
+  endforeach ()
+
+  rosidl_generate_interfaces (
+    ambf_msgs
+    ${MESSAGES_ROS2}
+    DEPENDENCIES builtin_interfaces std_msgs geometry_msgs)
+
+  ament_package ()
+endif ()
 
 
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-
-)

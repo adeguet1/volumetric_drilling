@@ -55,11 +55,9 @@ else (ROS_VERSION EQUAL 2)
   endforeach ()
 
   rosidl_generate_interfaces (
-    ambf_msgs
+    volumetric_drilling_msgs
     ${MESSAGES_ROS2}
     DEPENDENCIES builtin_interfaces std_msgs geometry_msgs)
 
   ament_package ()
 endif ()
-
-

@@ -52,7 +52,12 @@ if (catkin_FOUND)
   add_definitions (-DROS1)
   set (ROS_VERSION 1)
   include_directories (${catkin_INCLUDE_DIRS})
-  
+
+  catkin_package(
+    LIBRARIES volumetric_drilling
+    CATKIN_DEPENDS ${ROS1_depends}
+    )
+
 else (catkin_FOUND)
 
   # look for ROS2
@@ -76,7 +81,7 @@ include_directories (
 link_directories (${AMBF_LIBRARY_DIRS})
 
 add_definitions (${AMBF_DEFINITIONS})
-  
+
 add_library(volumetric_drilling
   SHARED
   volumetric_drilling/common.h

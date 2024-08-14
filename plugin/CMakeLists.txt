@@ -43,7 +43,7 @@ project (volumetric_drilling)
 find_package(AMBF)
 find_package(Boost COMPONENTS program_options filesystem)
 
-set (ROS1_depends ambf_server volumetric_drilling_msgs)
+set (ROS1_depends roscpp ambf_server volumetric_drilling_msgs)
 find_package (catkin QUIET
   COMPONENTS ${ROS1_depends})
 

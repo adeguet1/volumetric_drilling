@@ -6,6 +6,12 @@ environment: ./checkered_floor.yaml
 namespace: /ambf/env/
 max iterations: 50
 gravity: {x: 0.0, y: 0.0, z: -0.0}
+plugins: [
+  {
+    name: "world_comm_plugin",
+    filename: "libworld_plugins_loader.so"
+  }
+]
 conversion factor: 0.049664
 # shaders:
 #   path: ../../ambf_shaders/normal_map

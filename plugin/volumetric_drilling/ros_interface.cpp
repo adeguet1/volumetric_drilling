@@ -56,7 +56,7 @@ DrillingPublisher::~DrillingPublisher(){
 }
 
 void DrillingPublisher::init(const string & a_namespace, const string & a_plugin){
-    m_rosNode = afROSNode::getNode(a_plugin);
+    m_rosNode = afROSNode::getNodeAndRegister(a_plugin);
 
     ambf_ral::create_publisher<AMBF_RAL_MSG(volumetric_drilling_msgs, Voxels)>
       (m_voxelsRemovalPubPtr,

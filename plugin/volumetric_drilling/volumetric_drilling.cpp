@@ -230,6 +230,8 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
 
     m_drillManager.update(dt);
 
+    ambf_ral::spin_some(m_drillManager.m_drillingPub->m_rosNode);
+
     if (m_drillManager.m_toolCursorList[0]->isInContact(m_voxelObj) && m_drillManager.m_targetToolCursorIdx == 0 /*&& (userSwitches == 2)*/)
     {
 

@@ -16,13 +16,11 @@ set (MESSAGES
 
 # ROS 1
 if (catkin_FOUND)
-  add_definitions (-DROS1)
   set (ROS_VERSION 1)
 else (catkin_FOUND)
   # look for ROS2
   find_package(ament_cmake QUIET)
   if (ament_cmake_FOUND)
-    add_compile_definitions (ROS2)
     set (ROS_VERSION 2)
     find_package (rosidl_default_generators REQUIRED)
     find_package (std_msgs REQUIRED)

@@ -49,7 +49,6 @@ find_package (catkin QUIET
 
 # ROS 1
 if (catkin_FOUND)
-  add_definitions (-DROS1)
   set (ROS_VERSION 1)
   include_directories (${catkin_INCLUDE_DIRS})
 
@@ -63,7 +62,6 @@ else (catkin_FOUND)
   # look for ROS2
   find_package (ament_cmake QUIET)
   if (ament_cmake_FOUND)
-    add_definitions (-DROS2)
     set (ROS_VERSION 2)
     set (ROS2_depends rclcpp geometry_msgs ambf_msgs volumetric_drilling_msgs ambf_server)
     foreach (_dep ${ROS2_depends})

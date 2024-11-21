@@ -45,13 +45,13 @@
 #define COLLISION_PUBLISHER_H
 
 #include <ambf_server/ambf_ral.h>
-#if ROS1
+#if AMBF_ROS1
 // #include <std_msgs/ColorRGBA.h>
 #include <geometry_msgs/WrenchStamped.h>
 #include <volumetric_drilling_msgs/Voxels.h>
 #include <volumetric_drilling_msgs/DrillSize.h>
 #include <volumetric_drilling_msgs/VolumeInfo.h>
-#elif ROS2
+#elif AMBF_ROS2
 // #include <std_msgs/msg/color_rgba.h>
 #include <geometry_msgs/msg/wrench_stamped.hpp>
 #include <volumetric_drilling_msgs/msg/voxels.hpp>
